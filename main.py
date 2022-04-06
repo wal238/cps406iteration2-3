@@ -12,7 +12,7 @@ class Member:  # after a member registers providing the details below his accoun
         self.mail = mail
 
 
-# function below checks fn, ln, email and password, ensrues fields are not left empty/
+# function below checks fn, ln, email and password, ensrues fields are not left empty/proper chars are inputted
 def user_signUpError(fn, ln, email, password):
     if bool(fn and not fn.isspace()) == False:
         print("Invalid first name, field left blank")
