@@ -1,4 +1,4 @@
-from pprint import pprint
+from pprint import pprint  # used later below in helper action "members"
 members = []  # array to store all the members of the club
 current_member = ""
 
@@ -83,6 +83,7 @@ while(actions != "quit"):
         user_signUp()
     elif(actions == "Login" or actions == "login"):
         user_login()
+    # helper action for u guys to check the members
     elif(actions == "Members" or actions == "members"):
         for x in members:
             pprint(vars(x))
