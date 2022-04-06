@@ -12,6 +12,7 @@ class Member:  # after a member registers providing the details below his accoun
         self.mail = mail
 
 
+# function below checks fn, ln, email and password, ensrues fields are not left empty/
 def user_signUpError(fn, ln, email, password):
     if bool(fn and not fn.isspace()) == False:
         print("Invalid first name, field left blank")
@@ -25,11 +26,18 @@ def user_signUpError(fn, ln, email, password):
     elif ln.isalpha() == False:
         print("Invalid last name, please only enter letters")
         return False
+    elif bool(email and not email.isspace()) == False:
+        print("Enter a valid email, field left blank")
     elif ("@" in email) == False or ("." in email) == False:
         print("Invalid email, please enter a valid email")
         return False
+    elif bool(password and not password.isspace()) == False:
+        print("Enter a valid password, field left blank")
+        return False
     else:
         return True
+
+# function below registers a user and if the user entered valid information adds the user to an array of members
 
 
 def user_signUp():
@@ -40,6 +48,8 @@ def user_signUp():
     if user_signUpError(fn, ln, email, password) == True:
         member = Member(fn, ln, email, password, [])
         members.append(member)
+
+# function below checks if the user has entered a valid email/password (if the user has an account)
 
 
 def user_loginError(email, password):
@@ -53,6 +63,8 @@ def user_loginError(email, password):
     return False
 
 
+# function gives user an interface to enter email and password and checks the information provided
+# by the user and prints the information accordingly
 def user_login():
     email = input("Email : ")
     password = input("Password : ")
@@ -62,6 +74,7 @@ def user_login():
         print("Welcome back "+current_member)
 
 
+# basically like a main function where everything else happens
 print("Welcome to MEM club!")
 actions = ""
 while(actions != "quit"):
