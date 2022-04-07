@@ -13,6 +13,11 @@ class Member:  # after a member registers providing the details below his accoun
         self.password = password
         self.mail = mail
 
+def clear():
+    cmd = 'clear'
+    if os.name in ('nt', 'dos'): 
+        cmd = 'cls'
+    os.system(cmd)
 
 # function below checks fn, ln, email and password, ensrues fields are not left empty/proper chars are inputted
 def user_signUpError(fn, ln, email, password):
@@ -43,7 +48,7 @@ def user_signUpError(fn, ln, email, password):
 
 
 def user_signUp():
-    os.system('cls')
+    clear()
     fn = input("First name : ")
     ln = input("Last name : ")
     email = input("Email : ")
@@ -51,7 +56,7 @@ def user_signUp():
     if user_signUpError(fn, ln, email, password) == True:
         member = Member(fn, ln, email, password, [])
         members.append(member)
-        os.system('cls')
+        clear()
         print("You have successfully created an account",member.first_name,"!")
 
 # function below checks if the user has entered a valid email/password (if the user has an account)
@@ -71,17 +76,17 @@ def user_loginError(email, password):
 # function gives user an interface to enter email and password and checks the information provided
 # by the user and prints the information accordingly
 def user_login():
-    os.system('cls')
+    clear()
     email = input("Email : ")
     password = input("Password : ")
     if user_loginError(email, password) == False:
         print("Invalid login credentials")
     else:
-        os.system('cls')
+        clear()
         print("Welcome back "+current_member)
 
 def user_logout():
-    os.system('cls')
+    clear()
     global current_member
     current_member = ""
     print(current_member)
@@ -90,7 +95,7 @@ def user_logout():
         
 # this function allows coach to send mail to members 
 def send_mail():
-    os.system('cls')
+    clear()
     if (current_member == ""):
         print("You must be logged in to send mail!")
         main()
@@ -112,7 +117,7 @@ def send_mail():
                 print("Message sent!")
 
 def check_mail():
-    os.system('cls')
+    clear()
     if (current_member == ""):
         print("You must be logged in to check mail!")
         main()
@@ -129,7 +134,6 @@ def check_mail():
 
 # basically like a main function where everything else happens
 def main():
-    #os.system('cls')
     print("Welcome to MEM club!\nLogin or Register\n")
     actions = ""
     while(actions != "quit"):
