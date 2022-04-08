@@ -14,6 +14,12 @@ class Member:  # after a member registers providing the details below his accoun
         self.mail = mail
 
 
+Treasurer = Member("Treasurer", "", "treasurer@mem.com", "treasurer123", [])
+members.append(Treasurer)
+Coach = Member("Coach", "", "coach@mem.com", "coach123", [])
+members.append(Coach)
+
+
 def clear():
     cmd = 'clear'
     if os.name in ('nt', 'dos'):
@@ -108,10 +114,11 @@ def send_mail():
     message = input("Enter the message you would like to send: ")
     if send_to == "all":
         for member in members:
-            now = datetime.now()
-            date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
-            member.mail.append(date_time+message)
-            print("Message sent!")
+            if(member != Coach):
+                now = datetime.now()
+                date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
+                member.mail.append(date_time+message)
+                print("Message sent!")
     else:
         for member in members:
             if member.email == send_to:
@@ -210,7 +217,7 @@ def main():
         elif(actions == "Members" or actions == "members"):
             for x in members:
                 pprint(vars(x))
-        elif(actions == "send"):
+        elif(actions == "send" and current_member == "Coach "):
             send_mail()
         elif(actions == "check mail"):
             check_mail()
@@ -221,4 +228,3 @@ def main():
 
 
 main()
-# I cloned a repoo
