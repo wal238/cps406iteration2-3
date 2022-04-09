@@ -12,6 +12,8 @@ class Member:  # after a member registers providing the details below his accoun
         self.email = email
         self.password = password
         self.mail = mail
+        self.amountDue = 10
+        self.monthsDue = 1
 
 
 Treasurer = Member("Treasurer", "", "treasurer@mem.com", "treasurer123", [])
