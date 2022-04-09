@@ -149,7 +149,7 @@ def make_payment():
         print("You must be logged in to make a payment!\n")
         main()
 
-    os.system('clear')
+    clear()
     print("Welcome to the payment page!\n")
     for member in members:
         if member.first_name+" "+member.last_name == current_member:
@@ -160,7 +160,7 @@ def make_payment():
     user_inp = input("\nMake a single-time payment?\n")
     amount = input("Enter the amount : $")
 
-    os.system('clear')
+    clear()
     if user_inp == "yes":
         payment_type = input(
             "Please select a payment type: Debit or Credit \n:")
@@ -178,14 +178,14 @@ def make_payment():
 
         currMember.amountDue -= int(amount)
         currMember.monthsDue -= 1
-        os.system('clear')
+        clear()
         print("Payment was successful!")
 
         user_inp = input("Make Another Payment?:")
         if user_inp == "yes":
             make_payment()
         else:
-            os.system('clear')
+            clear()
     else:
         main()
 
