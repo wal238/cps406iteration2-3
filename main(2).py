@@ -177,7 +177,7 @@ def make_payment():
             currMember = member
             break
     print("Your Account Membership Fees: $", currMember.amountDue)
-    print("Your account owes for this many practise sessions:", currMember.monthsDue)
+     print("Your account owes for "+str(currMember.monthsDue)+" practise sessions:")
     user_inp = input("\nMake a single-time payment? ('Yes'/'No')\n")
     clear()
 
