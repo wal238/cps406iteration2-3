@@ -1,8 +1,10 @@
+from ast import Pass
 from pprint import pprint  # used later below in helper action "members"
 from datetime import datetime
 import os
 members = []  # array to store all the members of the club
 current_member = ""
+global currMember
 
 
 class Member:  # after a member registers providing the details below his account is created with the information below
@@ -60,15 +62,17 @@ def user_signUpError(fn, ln, email, password):
 
 def user_signUp():
     clear()
-    fn = input("First name : ")
-    ln = input("Last name : ")
-    email = input("Email : ")
-    password = input("Password : ")
+    fn = input("First name: ")
+    ln = input("Last name: ")
+    email = input("Email: ")
+    password = input("Password: ")
     if user_signUpError(fn, ln, email, password) == True:
         member = Member(fn, ln, email, password, [])
         members.append(member)
         clear()
         print("You have successfully created an account", member.first_name, "!")
+        print("'Login' to access your account.")
+
 
 # function below checks if the user has entered a valid email/password (if the user has an account)
 
@@ -94,7 +98,16 @@ def user_login():
         print("Invalid login credentials")
     else:
         clear()
-        print("Welcome back "+current_member)
+        payment_reminder()
+        welcome_page()
+
+
+def welcome_page():
+    print("Welcome "+current_member+"!")
+    if(current_member == "Coach "):
+        print("'check/send mail'")
+    else:
+        print("'check mail' or 'make payment'")
 
 
 def user_logout():
@@ -111,22 +124,29 @@ def send_mail():
     if (current_member == ""):
         print("You must be logged in to send mail!")
         main()
+        return
+
+    if (current_member != "Coach "):
+        print("You do not have access to perform this action")
+        welcome_page()
+        return
 
     send_to = input("Type 'all' to send to all members\nTo: ")
     message = input("Enter the message you would like to send: ")
     if send_to == "all":
         for member in members:
-            if(member != Coach):
-                now = datetime.now()
-                date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
-                member.mail.append(date_time+message)
-                print("Message sent!")
+            now = datetime.now()
+            date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
+            fr = "From:" + current_member+"\n"
+            member.mail.append(date_time+fr+message)
+        print("Message sent!")
     else:
         for member in members:
             if member.email == send_to:
                 now = datetime.now()
                 date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
-                member.mail.append(date_time+message)
+                fr = "From: " + current_member+"\n"
+                member.mail.append(date_time+fr+message)
                 print("Message sent!")
 
 
@@ -155,22 +175,27 @@ def make_payment():
     print("Welcome to the payment page!\n")
     for member in members:
         if member.first_name+" "+member.last_name == current_member:
+            global currMember
             currMember = member
             break
     print("Your Account Membership Fees: $", currMember.amountDue)
-    print("Your Account owes this many month of rent:", currMember.monthsDue)
-    user_inp = input("\nMake a single-time payment?\n")
-    amount = input("Enter the amount : $")
-
+    print("Your account owes for "+str(currMember.monthsDue)+" practise sessions:")
+    user_inp = input("\nMake a single-time payment? ('Yes'/'No')\n")
     clear()
-    if user_inp == "yes":
+
+    if currMember.amountDue == 0 and currMember.monthsDue == 0:
+        print("Your account owes no fees!\nTaking you to the homepage!")
+        welcome_page()
+
+    if user_inp == "yes" or user_inp == "Yes":
+        amount = input("Enter the amount: $")
         payment_type = input(
-            "Please select a payment type: Debit or Credit \n:")
+            "Please select a payment type: Debit or Credit \n")
 
         while payment_type != "Debit":
             payment_type = input(
-                "Select a valid payment method.\nPlease select a payment type: Debit or Credit \n:")
-        card_info = input("Please enter your card number: ")
+                "Select a valid payment method.\nPlease select a payment type: 'Debit' or 'Credit' \n")
+        card_info = input("Please enter your card number (xxxxXXXXxxxxXXXX): ")
         card_date = input("Please enter expiry date (XXXX): ")
 
         while valid_payment(card_info, card_date) == False:
@@ -183,13 +208,13 @@ def make_payment():
         clear()
         print("Payment was successful!")
 
-        user_inp = input("Make Another Payment?:")
+        user_inp = input("Make Another Payment? (yes|no)")
         if user_inp == "yes":
             make_payment()
-        else:
-            clear()
+        elif user_inp == "no":
+            welcome_page()
     else:
-        main()
+        welcome_page()
 
 
 # this function tests wether the card details are correct # card digits
@@ -205,10 +230,24 @@ def valid_payment(card, date):
             return False
 
 
+def payment_reminder():
+    for member in members:
+        if member.first_name+" "+member.last_name == current_member:
+            global currMember
+            currMember = member
+            if (currMember.monthsDue > 0 and current_member != "Coach " and current_member != "Treasurer "):
+                now = datetime.now()
+                date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
+                message = "You have insufficient funds for this month.\nPlease make a payment to your account.\nEnter 'make payment' to get started!"
+                member.mail.append(date_time+message)
+
+
 # basically like a main function where everything else happens
 def main():
     print("Welcome to MEM club!\nLogin or Register\n")
     actions = ""
+    options = "Register, Login, Members, send mail, check mail, make payment, logout"
+
     while(actions != "quit"):
         actions = input()
         if(actions == "Register" or actions == "register"):
@@ -219,7 +258,7 @@ def main():
         elif(actions == "Members" or actions == "members"):
             for x in members:
                 pprint(vars(x))
-        elif(actions == "send" and current_member == "Coach "):
+        elif(actions == "send mail"):
             send_mail()
         elif(actions == "check mail"):
             check_mail()
@@ -227,6 +266,11 @@ def main():
             make_payment()
         elif(actions == "logout"):
             user_logout()
+        elif (actions == "options"):
+            print(f"\nOptions Available:\n{options}")
+        else:
+            print("Action not recognized, please enter a valid input.")
 
 
+clear()
 main()
