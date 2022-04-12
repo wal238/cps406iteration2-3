@@ -1,9 +1,10 @@
+from ast import Pass
 from pprint import pprint  # used later below in helper action "members"
 from datetime import datetime
 import os
 members = []  # array to store all the members of the club
 current_member = ""
-
+global currMember
 
 class Member:  # after a member registers providing the details below his account is created with the information below
     def __init__(self, first_name, last_name, email, password, mail):
@@ -12,14 +13,25 @@ class Member:  # after a member registers providing the details below his accoun
         self.email = email
         self.password = password
         self.mail = mail
+        self.amountDue = 10
+        self.monthsDue = 1
+
+
+Treasurer = Member("Treasurer", "", "treasurer@mem.com", "treasurer123", [])
+members.append(Treasurer)
+Coach = Member("Coach", "", "coach@mem.com", "coach123", [])
+members.append(Coach)
+
 
 def clear():
     cmd = 'clear'
-    if os.name in ('nt', 'dos'): 
+    if os.name in ('nt', 'dos'):
         cmd = 'cls'
     os.system(cmd)
 
 # function below checks fn, ln, email and password, ensrues fields are not left empty/proper chars are inputted
+
+
 def user_signUpError(fn, ln, email, password):
     if bool(fn and not fn.isspace()) == False:
         print("Invalid first name, field left blank")
@@ -49,15 +61,17 @@ def user_signUpError(fn, ln, email, password):
 
 def user_signUp():
     clear()
-    fn = input("First name : ")
-    ln = input("Last name : ")
-    email = input("Email : ")
-    password = input("Password : ")
+    fn = input("First name: ")
+    ln = input("Last name: ")
+    email = input("Email: ")
+    password = input("Password: ")
     if user_signUpError(fn, ln, email, password) == True:
         member = Member(fn, ln, email, password, [])
         members.append(member)
         clear()
-        print("You have successfully created an account",member.first_name,"!")
+        print("You have successfully created an account", member.first_name, "!")
+        print("'Login' to access your account.")
+    
 
 # function below checks if the user has entered a valid email/password (if the user has an account)
 
@@ -82,8 +96,17 @@ def user_login():
     if user_loginError(email, password) == False:
         print("Invalid login credentials")
     else:
-        clear()
-        print("Welcome back "+current_member)
+       clear()
+       payment_reminder()
+       welcome_page()
+
+def welcome_page():
+    print("Welcome "+current_member+"!")
+    if(current_member == "Coach "):
+        print("'check/send mail'")
+    else:
+        print("'check mail' or 'make payment'")
+
 
 def user_logout():
     clear()
@@ -92,29 +115,38 @@ def user_logout():
     print(current_member)
     main()
 
-        
-# this function allows coach to send mail to members 
+
+# this function allows coach to send mail to members
 def send_mail():
     clear()
     if (current_member == ""):
         print("You must be logged in to send mail!")
         main()
-    
-    send_to= input("Type 'all' to send to all members\nTo: ")
+        return
+
+    if (current_member != "Coach "):
+        print("You do not have access to perform this action")
+        welcome_page()
+        return
+
+    send_to = input("Type 'all' to send to all members\nTo: ")
     message = input("Enter the message you would like to send: ")
     if send_to == "all":
         for member in members:
             now = datetime.now()
             date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
-            member.mail.append(date_time+message)
-            print("Message sent!")
+            fr = "From:" +current_member+"\n"
+            member.mail.append(date_time+fr+message)
+        print("Message sent!")
     else:
         for member in members:
-            if member.email == send_to: 
+            if member.email == send_to:
                 now = datetime.now()
                 date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
-                member.mail.append(date_time+message)
+                fr = "From: " +current_member+"\n"
+                member.mail.append(date_time+fr+message)
                 print("Message sent!")
+
 
 def check_mail():
     clear()
@@ -125,11 +157,82 @@ def check_mail():
     for member in members:
         if member.first_name+" "+member.last_name == current_member:
             if not member.mail:
-                    print("You have no mail.")
+                print("You have no mail.")
             else:
                 for i in member.mail:
-                    print(i,"\n")
-        
+                    print(i, "\n")
+
+
+# this function allows the user to make a one-time payment
+def make_payment():
+    if (current_member == ""):
+        print("You must be logged in to make a payment!\n")
+        main()
+
+    clear()
+    print("Welcome to the payment page!\n")
+    for member in members:
+        if member.first_name+" "+member.last_name == current_member:
+            global currMember
+            currMember = member
+            break
+    print("Your Account Membership Fees: $", currMember.amountDue)
+    print("Your account owes for this many practise sessions:", currMember.monthsDue)
+    user_inp = input("\nMake a single-time payment? ('Yes'/'No')\n")
+    clear()
+
+    if user_inp == "yes" or user_inp == "Yes":
+        amount = input("Enter the amount: $")
+        payment_type = input("Please select a payment type: Debit or Credit \n")
+
+        while payment_type != "Debit":
+            payment_type = input("Select a valid payment method.\nPlease select a payment type: 'Debit' or 'Credit' \n")
+        card_info = input("Please enter your card number (xxxxXXXXxxxxXXXX): ")
+        card_date = input("Please enter expiry date (XXXX): ")
+
+        while valid_payment(card_info, card_date) == False:
+            print("Your card details are incorrect, please try again!")
+            card_info = input("Please enter your card number: ")
+            card_date = input("Please enter expiry date (XXXX): ")
+
+        currMember.amountDue -= int(amount)
+        currMember.monthsDue -= 1
+        clear()
+        print("Payment was successful!")
+
+        user_inp = input("Make Another Payment? ")
+        if user_inp == "yes":
+            make_payment()
+        else:
+            welcome_page()
+    else:
+        welcome_page()
+
+
+# this function tests wether the card details are correct # card digits
+def valid_payment(card, date):
+    if len(card) != 16:
+        return False
+    if len(date) != 4:
+        return False
+    if int(date[0]) > 1 and int(date[1]) > 12:
+        return False
+    for i in card:
+        if isinstance(i, str) == False:
+            return False
+
+def payment_reminder():
+    for member in members:
+        if member.first_name+" "+member.last_name == current_member:
+            global currMember
+            currMember = member
+            if (currMember.monthsDue > 0 and current_member != "Coach " and current_member != "Treasurer "):
+                now = datetime.now()
+                date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
+                message = "You have insufficient funds for this month.\nPlease make a payment to your account.\nEnter 'make payment' to get started!"
+                member.mail.append(date_time+message)
+
+
 
 
 # basically like a main function where everything else happens
@@ -146,10 +249,16 @@ def main():
         elif(actions == "Members" or actions == "members"):
             for x in members:
                 pprint(vars(x))
-        elif(actions == "send"):
+        elif(actions == "send mail"):
             send_mail()
         elif(actions == "check mail"):
             check_mail()
+        elif(actions == "make payment"):
+            make_payment()
         elif(actions == "logout"):
             user_logout()
+        else:
+            print("Action not recognized, please enter a valid input.")
+
+clear()
 main()
