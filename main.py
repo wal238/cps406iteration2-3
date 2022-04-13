@@ -55,7 +55,6 @@ def clear():
 
 # function below checks fn, ln, email and password, ensrues fields are not left empty/proper chars are inputted
 
-
 def user_signUpError(fn, ln, email, password):
     if bool(fn and not fn.isspace()) == False:
         print("Invalid first name, field left blank")
@@ -99,7 +98,6 @@ def user_signUp():
 
 # function below checks if the user has entered a valid email/password (if the user has an account)
 
-
 def user_loginError(email, password):
     global current_member
     if(members == []):
@@ -122,6 +120,7 @@ def user_login():
     else:
         clear()
         payment_reminder()
+        penalty_fee()
         welcome_page()
 
 
@@ -211,7 +210,7 @@ def make_payment():
     clear()
 
     #don't think this is needed, in case member wants to over pay
-    """if currMember.amountDue == 0 and currMember.weeksDue == 0 and (user_inp == "yes" or user_inp == "Yes"):
+    """if currMember.amountDue <= -10 and currMember.weeksDue == 0 and (user_inp == "yes" or user_inp == "Yes"):
         print("Your account owes no fees!\nTaking you to the home page!")
         welcome_page()
         return"""
@@ -260,14 +259,14 @@ def valid_payment(card, date):
         if isinstance(i, str) == False:
             return False
 
-
+# this function sends a payment reminder message to member if they attended a practise and have not made a payment
 def payment_reminder():
     for member in members:
         if member.first_name+" "+member.last_name == current_member:
             global currMember
             currMember = member
 
-            if (currMember.weeksDue > 0 and current_member != "Coach " and current_member != "Treasurer "):
+            if (currMember.amountDue > 0 and current_member != "Coach " and current_member != "Treasurer "):
                 now = datetime.now()
                 date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
                 global message
