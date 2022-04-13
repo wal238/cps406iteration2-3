@@ -8,11 +8,16 @@ current_member = ""
 global currMember
 
 #array that keeps a log of the # of members that atttended weekly. 
-#Ex: [3, 4, 5, -1] 3 attended week 1, 4 attended week 2, etc,. when val -1 then week has not had meeting yet
-membersAttended = [0, 0, 0, 0] 
-weekNumber = 1
+#Ex: [3, 4, 5, 0] 3 attended week 1, 4 attended week 2, etc,. when val 0 then week has not had meeting yet
+membersAttended = [0, 0, 0, 0]
+weekNumber = 1 #1 - 4 weeks. resets to 0 when > 4
 monthNumber = 0
 membersAttendedThisWeek = []
+accountPayables = 0
+memberPayments = 0
+
+monthlyUnpaidDebt = [{'monthNumber':monthNumber, 'monthlyDebt':0}]
+monthlyProfits = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 
 class Member:  # after a member registers providing the details below his account is created with the information below
@@ -25,13 +30,19 @@ class Member:  # after a member registers providing the details below his accoun
 
         self.amountDue = 0 #how much money a member owes for this month
         self.weeksDue = 0 #the weeks member hasn't paid for yet
-        self.attended = 0 #total weeks member attended
+        self.attended = 0 #number of weeks a member attended. Max = 4 weeks, then resets to 0. (simulates a month passing)
 
 
 Treasurer = Member("Treasurer", "", "treasurer@mem.com", "treasurer123", [])
 members.append(Treasurer)
 Coach = Member("Coach", "", "coach@mem.com", "coach123", [])
 members.append(Coach)
+
+members.append(Member("k", "y", "ky@mem.com", "ky", []))
+members.append(Member("j", "k", "jk@mem.com", "jk", []))
+members.append(Member("s", "y", "sy@mem.com", "sy", []))
+members.append(Member("y", "y", "yy@mem.com", "yy", []))
+
 
 
 def clear():
@@ -115,7 +126,9 @@ def user_login():
 def welcome_page():
     print("Welcome "+current_member+"!")
     if(current_member == "Coach "):
-        print("'check/send mail', 'attendees', 'remove member' or 'logout'")
+        print("'check/send mail', 'attendees', 'remove member', 'sort members' or 'logout'")
+    elif(current_member == "Treasurer "):
+        print("'check mail', 'make payment', 'income statement', 'logout'")
     else:
         print("'check mail', 'make payment', 'logout'")
 
@@ -190,14 +203,16 @@ def make_payment():
             currMember = member
             break
     print("Your Account Membership Fees: $", currMember.amountDue)
-    print("Your account owes for "+str(currMember.weeksDue)+" practise sessions:")
+    print("Your account owes for "+str(currMember.weeksDue)+" practice sessions:")
 
     user_inp = input("\nMake a single-time payment? ('Yes'/'No')\n> ")
     clear()
 
-    if currMember.amountDue == 0 and currMember.weeksDue == 0 and (user_inp == "yes" or user_inp == "Yes"):
+    #don't think this is needed, in case member wants to over pay
+    """if currMember.amountDue == 0 and currMember.weeksDue == 0 and (user_inp == "yes" or user_inp == "Yes"):
         print("Your account owes no fees!\nTaking you to the home page!")
         welcome_page()
+        return"""
 
     if user_inp == "yes" or user_inp == "Yes":
         amount = input("Enter the amount: $")
@@ -228,6 +243,7 @@ def make_payment():
             return
     else:
         welcome_page()
+        return
 
 
 # this function tests wether the card details are correct # card digits
@@ -261,10 +277,10 @@ def remove_member():
     memberRemoveF = input("First: ")
     memberRemoveL = input("Last: ")
 
-    for x in members:
+    for member in members:
         found = False
-        if (x.first_name == memberRemoveF) and (x.last_name == memberRemoveL):
-            members.remove(x)
+        if (member.first_name == memberRemoveF) and (member.last_name == memberRemoveL):
+            members.remove(member)
             found = True
             print("Successfully removed "+memberRemoveF+" "+memberRemoveL+"\n")
     if not found:
@@ -272,7 +288,39 @@ def remove_member():
 
 
     print("Please select one of the option below:")
-    print("'check/send mail', 'attendees', 'remove member' or 'logout'")
+    print("'check/send mail', 'attendees', 'remove member', 'sort members' or 'logout'")
+
+#sorts members by paid, not paid, or attendance
+def sort_members():
+    clear()
+    sortType = input("Please enter if you want to sort the members by paid, not paid or attendance: ")
+
+    if sortType == "not paid":
+        new1 = sorted(members, key=lambda x: x.weeksDue, reverse =True)
+        for x in new1:
+            if x.amountDue>0:
+                print(x.first_name+" "+x.last_name+" has not paid for "+str(x.weeksDue)+" week/s")
+    if sortType == "paid":
+        found = False
+        new2 = sorted(members, key=lambda x: x.amountDue, reverse = False)
+        for x in new2:
+            if x.amountDue==0 and not x.attended == 0:
+                print(x.first_name+" "+x.last_name+" has paid for "+str(x.attended)+" of the attended weeks")
+                found = True
+            if x.amountDue<0:
+                print(x.first_name+" "+x.last_name+" has paid for "+str(x.attended)+" of the attended weeks and left $"+str(abs(x.amountDue))+" for future ones.")
+                found = True
+        if not found:
+            print("No members have paid for a meeting this month")
+
+    if sortType == "attendance":
+        new3 = sorted(members, key=lambda x: x.attended, reverse = True)
+        for x in new3:
+            if not x.first_name == "Coach" and not x.first_name=="Treasurer":
+                print(x.first_name+" "+x.last_name+" has attended "+str(x.attended)+" classes in one month")
+
+    print("\nPlease select one of the option below:")
+    print("'check/send mail', 'attendees', 'remove member', 'sort members' or 'logout'")
 
 
 #this function simulates the next week and updates the weekly values correspondingly
@@ -280,6 +328,11 @@ def updateWeek():
     global weekNumber
     global membersAttendedThisWeek
     global membersAttended
+    global accountPayables
+    global memberPayments
+    memberPayments = 0
+    accountPayables = 0
+
     if weekNumber == 4:
         updateMonth()
         weekNumber = 1
@@ -294,9 +347,15 @@ def updateMonth():
     global monthNumber
     global membersAttendedThisWeek
     global membersAttended
+    global accountPayables
+    global memberPayments
     monthNumber += 1
     membersAttended = [-1, -1, -1, -1]
     membersAttendedThisWeek = []
+    accountPayables = 0
+    memberPayments = 0
+    for member in members:
+            member.attended = 0
 
 
 def updateAttendees():
@@ -338,6 +397,50 @@ def updateAttendees():
         clear()
         welcome_page()
 
+#calculates the month's current revenue
+def revenue():
+    global accountPayables
+    global memberPayments
+
+    for member in members:
+        if (member.amountDue<0):
+            accountPayables += abs(member.amountDue)
+        elif(member.amountDue == 0 and member.attended > 0 and member.weeksDue == 0):
+            memberPayments += member.attended * 10
+
+#calculates and returns the net income, and also updates monthlyProfits and monthlyUnpaidDebts
+def net_income():
+    net_income = 0
+    global monthNumber
+    global accountPayables
+    global memberPayments
+    global monthlyUnpaidDebt # [{'monthNumber':monthNumber, 'monthlyDebt':monthlyDebt}]
+
+    revenue()
+
+    net_income = memberPayments + accountPayables - 400 - 60 - 400
+
+
+    monthlyProfits[monthNumber] = net_income
+
+    for aMonthsDebt in range(len(monthlyUnpaidDebt)):
+        if(monthlyUnpaidDebt[aMonthsDebt]['monthNumber'] == monthNumber and net_income < 0):
+            monthlyUnpaidDebt[aMonthsDebt]['monthlyDebt'] = net_income
+            break
+        elif(monthlyUnpaidDebt[aMonthsDebt]['monthNumber'] == monthNumber and net_income >= 0):
+            monthlyUnpaidDebt[aMonthsDebt]['monthlyDebt'] = 0
+            break
+        elif(net_income < 0):
+            monthlyUnpaidDebt.append({'monthNumber':monthNumber, 'monthlyDebt':net_income})
+        elif(net_income >= 0):
+            monthlyUnpaidDebt.append({'monthNumber':monthNumber, 'monthlyDebt':0})
+
+
+    
+    return net_income
+
+
+#prints the income statement
 def income_statement():
     clear()
     if (current_member == ""):
@@ -350,31 +453,32 @@ def income_statement():
         welcome_page()
         return
 
-    print("Income Statement: \n")
+    print("Income Statement")
+    print("=-=-=-=-=-=-=-=-\n")
 
-    print("Revenue: \n")
-    accountPayables = 0
-    for x in members:
-        if (x.amountDue<0):
-            accountPayables += abs(x.amountDue)
-    print(accountPayables)
+    print("Revenue:")
+    print("---------")
+    revenue()
+    print("Member payments      \t" + str(memberPayments))
+    print("Account payables     \t" + str(accountPayables) + "\n")
 
-            
+    print("Expenses:")
+    print("---------")
+    print("Hall expenses        \t400")
+    print("Equipment maintenance\t60")
+    print("Coach's Salary       \t400\n")
+
+    print("Net income:")
+    print("---------")
+    netIncome = net_income()
+    print("Revenue - Expenses   \t" + str(netIncome) + "\n")
+
+    print(monthlyProfits)
+    print(monthlyUnpaidDebt)
+
+    print("\nMonths profits:")
+    print("---------")
     
-
-    
-
-    print("Expenses: \n")
-
-    print("Net income: \n")
-
-    print("Months profits: \n")
-    
-
-
-
-    
-
 
 
 
@@ -417,8 +521,13 @@ def main():
             remove_member()
         elif(actions=="income statement"):
             income_statement()
+        elif(actions=="sort members"):
+            sort_members()
         elif(actions != "quit"):
             print("Action not recognized, please enter a valid input.")
+        elif(actions == "quit"):
+            clear()
+            exit()
 
 
 clear()
