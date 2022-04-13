@@ -230,7 +230,7 @@ def make_payment():
             card_info = input("Please enter your card number: ")
             card_date = input("Please enter expiry date (XXXX): ")
 
-        currMember.amountDue -= int(amount)
+        currMember.amountDue -= float(amount)
         currMember.weeksDue -= 1
         clear()
         print("Payment was successful!")
@@ -264,12 +264,26 @@ def payment_reminder():
         if member.first_name+" "+member.last_name == current_member:
             global currMember
             currMember = member
+
             if (currMember.weeksDue > 0 and current_member != "Coach " and current_member != "Treasurer "):
                 now = datetime.now()
                 date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
+                global message
                 message = "You have insufficient funds for this month.\nPlease make a payment to your account.\nEnter 'make payment' to get started!"
+                global reminder
+                if reminder == False:
+                    member.mail.append(date_time+message)
+                    reminder = True
+def penalty_fee():
+    for member in members:
+        if member.first_name+" "+member.last_name == current_member:
+            if (member.amountDue > 10 and current_member != "Coach " and current_member != "Treasurer "):
+                member.amountDue += 1.5
+                now = datetime.now()
+                date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
+                message = "Your account has been charged a penalty fee of $1.50 as a result of missed payments.\nMake a payment by entering 'make payment' to avoid additional fees!"
                 member.mail.append(date_time+message)
-
+                    
 #removes a member from the system
 def remove_member():
     clear()
