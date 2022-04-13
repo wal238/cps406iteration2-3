@@ -2,9 +2,17 @@ from ast import Pass
 from pprint import pprint  # used later below in helper action "members"
 from datetime import datetime
 import os
+from unittest import mock
 members = []  # array to store all the members of the club
 current_member = ""
 global currMember
+
+#array that keeps a log of the # of members that atttended weekly. 
+#Ex: [3, 4, 5, -1] 3 attended week 1, 4 attended week 2, etc,. when val -1 then week has not had meeting yet
+membersAttended = [0, 0, 0, 0] 
+weekNumber = 1
+monthNumber = 0
+membersAttendedThisWeek = []
 
 
 class Member:  # after a member registers providing the details below his account is created with the information below
@@ -14,8 +22,10 @@ class Member:  # after a member registers providing the details below his accoun
         self.email = email
         self.password = password
         self.mail = mail
-        self.amountDue = 10
-        self.monthsDue = 1
+
+        self.amountDue = 0 #how much money a member owes for this month
+        self.weeksDue = 0 #the weeks member hasn't paid for yet
+        self.attended = 0 #total weeks member attended
 
 
 Treasurer = Member("Treasurer", "", "treasurer@mem.com", "treasurer123", [])
@@ -105,16 +115,15 @@ def user_login():
 def welcome_page():
     print("Welcome "+current_member+"!")
     if(current_member == "Coach "):
-        print("'check/send mail'")
+        print("'check/send mail', 'attendees', 'remove member' or 'logout'")
     else:
-        print("'check mail' or 'make payment'")
+        print("'check mail', 'make payment', 'logout'")
 
 
 def user_logout():
     clear()
     global current_member
     current_member = ""
-    print(current_member)
     main()
 
 
@@ -163,6 +172,8 @@ def check_mail():
             else:
                 for i in member.mail:
                     print(i, "\n")
+    print("\nPlease select one of the options below:")
+    print("'check mail', 'make payment', 'logout'")
 
 
 # this function allows the user to make a one-time payment
@@ -179,22 +190,23 @@ def make_payment():
             currMember = member
             break
     print("Your Account Membership Fees: $", currMember.amountDue)
-    print("Your account owes for "+str(currMember.monthsDue)+" practise sessions:")
-    user_inp = input("\nMake a single-time payment? ('Yes'/'No')\n")
+    print("Your account owes for "+str(currMember.weeksDue)+" practise sessions:")
+
+    user_inp = input("\nMake a single-time payment? ('Yes'/'No')\n> ")
     clear()
 
-    if currMember.amountDue == 0 and currMember.monthsDue == 0:
-        print("Your account owes no fees!\nTaking you to the homepage!")
+    if currMember.amountDue == 0 and currMember.weeksDue == 0 and (user_inp == "yes" or user_inp == "Yes"):
+        print("Your account owes no fees!\nTaking you to the home page!")
         welcome_page()
 
     if user_inp == "yes" or user_inp == "Yes":
         amount = input("Enter the amount: $")
         payment_type = input(
-            "Please select a payment type: Debit or Credit \n")
+            "Please select a payment type: Debit or Credit \n> ")
 
-        while payment_type != "Debit":
+        while ((payment_type != "Debit") and (payment_type != "Credit")):
             payment_type = input(
-                "Select a valid payment method.\nPlease select a payment type: 'Debit' or 'Credit' \n")
+                "Select a valid payment method.\nPlease select a payment type: 'Debit' or 'Credit' \n> ")
         card_info = input("Please enter your card number (xxxxXXXXxxxxXXXX): ")
         card_date = input("Please enter expiry date (XXXX): ")
 
@@ -204,15 +216,16 @@ def make_payment():
             card_date = input("Please enter expiry date (XXXX): ")
 
         currMember.amountDue -= int(amount)
-        currMember.monthsDue -= 1
+        currMember.weeksDue -= 1
         clear()
         print("Payment was successful!")
 
-        user_inp = input("Make Another Payment? (yes|no)")
+        user_inp = input("Make Another Payment? (yes|no)\n> ")
         if user_inp == "yes":
             make_payment()
         elif user_inp == "no":
             welcome_page()
+            return
     else:
         welcome_page()
 
@@ -235,11 +248,135 @@ def payment_reminder():
         if member.first_name+" "+member.last_name == current_member:
             global currMember
             currMember = member
-            if (currMember.monthsDue > 0 and current_member != "Coach " and current_member != "Treasurer "):
+            if (currMember.weeksDue > 0 and current_member != "Coach " and current_member != "Treasurer "):
                 now = datetime.now()
                 date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
                 message = "You have insufficient funds for this month.\nPlease make a payment to your account.\nEnter 'make payment' to get started!"
                 member.mail.append(date_time+message)
+
+#removes a member from the system
+def remove_member():
+    clear()
+    print("Please provide the first and last name of the member you would like to remove: \n")
+    memberRemoveF = input("First: ")
+    memberRemoveL = input("Last: ")
+
+    for x in members:
+        found = False
+        if (x.first_name == memberRemoveF) and (x.last_name == memberRemoveL):
+            members.remove(x)
+            found = True
+            print("Successfully removed "+memberRemoveF+" "+memberRemoveL+"\n")
+    if not found:
+        print("Could not find "+memberRemoveF+" "+memberRemoveL+" in the system, please try again\n")
+
+
+    print("Please select one of the option below:")
+    print("'check/send mail', 'attendees', 'remove member' or 'logout'")
+
+
+#this function simulates the next week and updates the weekly values correspondingly
+def updateWeek():
+    global weekNumber
+    global membersAttendedThisWeek
+    global membersAttended
+    if weekNumber == 4:
+        updateMonth()
+        weekNumber = 1
+    else:
+        weekNumber += 1
+        membersAttended = [-1, -1, -1, -1]
+        membersAttendedThisWeek = []
+        
+
+#this function simulates the next month and updates the monthly values correspondingly
+def updateMonth():
+    global monthNumber
+    global membersAttendedThisWeek
+    global membersAttended
+    monthNumber += 1
+    membersAttended = [-1, -1, -1, -1]
+    membersAttendedThisWeek = []
+
+
+def updateAttendees():
+    
+    clear()
+    if (current_member == ""):
+        print("You must be logged in to send mail!")
+        main()
+        return
+
+    if (current_member != "Coach "):
+        print("You do not have access to perform this action!")
+        welcome_page()
+        return
+
+    global weekNumber
+    global membersAttended
+    global membersAttendedThisWeek
+    print("Members who attended todays meet: " + str(membersAttendedThisWeek) + "\n")
+
+    member = input("Enter member's first and last name. Ex: 'John Doe'. Enter done when finished.\n> ")
+    while(member != 'Done'):
+        for mem in members:
+            if mem.first_name+" "+mem.last_name == member:
+                membersAttendedThisWeek.append(mem)
+                mem.attended += 1
+                mem.amountDue += 10
+                mem.weeksDue += 1
+                membersAttended[weekNumber-1] = (membersAttended[weekNumber-1] + 1)
+
+                
+        member = input("> ")
+    
+    print("List of members who attended: " + str(membersAttendedThisWeek) + "\nWant to add more? (Yes/No)")
+    action = input("> ")
+    if (action == "Yes"):
+        updateAttendees()
+    else:
+        clear()
+        welcome_page()
+
+def income_statement():
+    clear()
+    if (current_member == ""):
+        print("You must be logged in to send mail!")
+        main()
+        return
+
+    if (current_member != "Treasurer "):
+        print("You do not have access to perform this action!")
+        welcome_page()
+        return
+
+    print("Income Statement: \n")
+
+    print("Revenue: \n")
+    accountPayables = 0
+    for x in members:
+        if (x.amountDue<0):
+            accountPayables += abs(x.amountDue)
+    print(accountPayables)
+
+            
+    
+
+    
+
+    print("Expenses: \n")
+
+    print("Net income: \n")
+
+    print("Months profits: \n")
+    
+
+
+
+    
+
+
+
 
 
 # basically like a main function where everything else happens
@@ -249,7 +386,7 @@ def main():
     options = "Register, Login, Members, send mail, check mail, make payment, logout"
 
     while(actions != "quit"):
-        actions = input()
+        actions = input("> ")
         if(actions == "Register" or actions == "register"):
             user_signUp()
         elif(actions == "Login" or actions == "login"):
@@ -258,6 +395,12 @@ def main():
         elif(actions == "Members" or actions == "members"):
             for x in members:
                 pprint(vars(x))
+        #helper action to simulate a week passing
+        elif(actions == "next week"):
+            updateWeek()
+        #helper action to simulate a month passing
+        elif(actions == "next month"):
+            updateMonth()
         elif(actions == "send mail"):
             send_mail()
         elif(actions == "check mail"):
@@ -266,9 +409,15 @@ def main():
             make_payment()
         elif(actions == "logout"):
             user_logout()
-        elif (actions == "options"):
+        elif(actions == "options"):
             print(f"\nOptions Available:\n{options}")
-        else:
+        elif(actions == "attendees") :
+            updateAttendees()
+        elif(actions == "remove member"):
+            remove_member()
+        elif(actions=="income statement"):
+            income_statement()
+        elif(actions != "quit"):
             print("Action not recognized, please enter a valid input.")
 
 
