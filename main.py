@@ -6,6 +6,8 @@ from unittest import mock
 members = []  # array to store all the members of the club
 current_member = ""
 global currMember
+global reminder
+reminder = False
 
 #array that keeps a log of the # of members that atttended weekly. 
 #Ex: [3, 4, 5, 0] 3 attended week 1, 4 attended week 2, etc,. when val 0 then week has not had meeting yet
