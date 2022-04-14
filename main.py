@@ -209,11 +209,10 @@ def make_payment():
     user_inp = input("\nMake a single-time payment? ('Yes'/'No')\n> ")
     clear()
 
-    #don't think this is needed, in case member wants to over pay
-    """if currMember.amountDue <= -10 and currMember.weeksDue == 0 and (user_inp == "yes" or user_inp == "Yes"):
+    if currMember.amountDue <= -10 and currMember.weeksDue == 0 and (user_inp == "yes" or user_inp == "Yes"):
         print("Your account owes no fees!\nTaking you to the home page!")
         welcome_page()
-        return"""
+        return
 
     if user_inp == "yes" or user_inp == "Yes":
         amount = input("Enter the amount: $")
