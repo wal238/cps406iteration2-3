@@ -7,6 +7,8 @@ members = []  # array to store all the members of the club
 current_member = ""
 global currMember
 global reminder
+global hallRent
+hallRent = 65
 reminder = False
 
 #array that keeps a log of the # of members that atttended weekly. 
@@ -129,10 +131,9 @@ def welcome_page():
     if(current_member == "Coach "):
         print("'check/send mail', 'attendees', 'remove member', 'sort members' or 'logout'")
     elif(current_member == "Treasurer "):
-        print("'check mail', 'make payment', 'income statement', 'logout'")
+        print("'check mail', 'hall payment', 'income statement', 'logout'")
     else:
         print("'check mail', 'make payment', 'logout'")
-
 
 def user_logout():
     clear()
@@ -274,6 +275,55 @@ def payment_reminder():
                 if reminder == False:
                     member.mail.append(date_time+message)
                     reminder = True
+
+
+def hall_payment():
+    clear()
+    global hallRent
+    if (current_member == ""):
+        print("You must be logged in to make a payment!\n")
+        main()
+        return
+    if (current_member != "Treasurer "):
+        print("You do not have access to perform this action.")
+        return
+    user_inp = input("Amount due: $" +str(hallRent)+"\nType 'c' to continue or 'q' to exit.\n")
+    if user_inp == "c" or user_inp == "C":
+        clear()
+        amount = input("Enter the amount: $")
+        if int(amount) < hallRent:
+            print("Please pay the full amount due to continue using MEM hall facilites.")
+            amount = input("Enter the amount: $")
+
+        payment_type = input(
+            "Please select a payment type: Debit or Credit \n> ")
+
+        while ((payment_type != "Debit") and (payment_type != "Credit")):
+            payment_type = input(
+                "Select a valid payment method.\nPlease select a payment type: 'Debit' or 'Credit' \n> ")
+        card_info = input("Please enter your card number (xxxxXXXXxxxxXXXX): ")
+        card_date = input("Please enter expiry date (XXXX): ")
+
+        while valid_payment(card_info, card_date) == False:
+            print("Your card details are incorrect, please try again!")
+            card_info = input("Please enter your card number: ")
+            card_date = input("Please enter expiry date (XXXX): ")
+
+        clear()
+        hallRent -= int(amount)
+        print("Payment was successful!")
+
+        user_inp = input("Make Another Payment? (yes|no)\n> ")
+        if user_inp == "yes":
+            hall_payment()
+        elif user_inp == "no":
+            welcome_page()
+            return
+    else:
+        welcome_page()
+        return   
+    
+    
 def penalty_fee():
     for member in members:
         if member.first_name+" "+member.last_name == current_member:
@@ -368,6 +418,8 @@ def updateMonth():
     membersAttendedThisWeek = []
     accountPayables = 0
     memberPayments = 0
+    global hallRent
+    hallRent = 65
     for member in members:
             member.attended = 0
 
@@ -525,6 +577,8 @@ def main():
             check_mail()
         elif(actions == "make payment"):
             make_payment()
+        elif(actions == "hall payment"):
+            hall_payment()
         elif(actions == "logout"):
             user_logout()
         elif(actions == "options"):
