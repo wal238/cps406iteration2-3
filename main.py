@@ -22,6 +22,7 @@ memberPayments = 0
 
 monthlyUnpaidDebt = [{'monthNumber': monthNumber, 'monthlyDebt': 0}]
 monthlyProfits = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+coachSalary = 0
 
 
 class Member:  # after a member registers providing the details below his account is created with the information below
@@ -213,17 +214,23 @@ def make_payment():
     user_inp = input("\nMake a single-time payment? ('Yes'/'No')\n> ")
     clear()
 
-    if currMember.amountDue <= -40 and currMember.weeksDue == 0 and (user_inp == "yes" or user_inp == "Yes"):
+    if currMember.amountDue <= -10 and currMember.weeksDue == 0 and (user_inp == "yes" or user_inp == "Yes"):
         print("Your account owes no fees!\nTaking you to the home page!")
         welcome_page()
         return
 
+
     if user_inp == "yes" or user_inp == "Yes":
         amount = input("Enter the amount: $")
-        payment_type = input(
-            "Please select a payment type: Debit or Credit \n> ")
-
-        while ((payment_type != "Debit") and (payment_type != "Credit")):
+    
+    if (50 - weekNumber*10) < int(amount):
+        print("Payment can only be made up to one month in advance, you can make a payment up to $"+str((50 - weekNumber*10)))
+    
+        
+    if (50 - weekNumber*10) >= int(amount):
+        payment_type = input("Please select a payment type: Debit or Credit \n> ")
+    
+        while ((payment_type != "Debit") and (payment_type != "Credit") ):
             payment_type = input(
                 "Select a valid payment method.\nPlease select a payment type: 'Debit' or 'Credit' \n> ")
         card_info = input("Please enter your card number (xxxxXXXXxxxxXXXX): ")
@@ -231,7 +238,7 @@ def make_payment():
 
         while valid_payment(card_info, card_date) == False:
             print("Your card details are incorrect, please try again!")
-            card_info = input("Please enter your card number: ")
+            card_info = input("Please enter your card number (xxxxXXXXxxxxXXXX): ")
             card_date = input("Please enter expiry date (XXXX): ")
 
         currMember.amountDue -= float(amount)
@@ -312,7 +319,7 @@ def hall_payment():
 
         while valid_payment(card_info, card_date) == False:
             print("Your card details are incorrect, please try again!")
-            card_info = input("Please enter your card number: ")
+            card_info = input("Please enter your card number (xxxxXXXXxxxxXXXX): ")
             card_date = input("Please enter expiry date (XXXX): ")
 
         clear()
@@ -417,40 +424,34 @@ def sort_members():
 
 # this function simulates the next week and updates the weekly values correspondingly
 def updateWeek():
-    global weekNumber
-    global membersAttendedThisWeek
-    global membersAttended
-    global accountPayables
-    global memberPayments
+    global weekNumber, membersAttendedThisWeek, membersAttended, accountPayables, memberPayments
+    
     memberPayments = 0
     accountPayables = 0
+    membersAttended = [-1, -1, -1, -1]
+    membersAttendedThisWeek = []
 
     if weekNumber == 4:
         updateMonth()
         weekNumber = 1
     else:
         weekNumber += 1
-        membersAttended = [-1, -1, -1, -1]
-        membersAttendedThisWeek = []
+        
 
 
 # this function simulates the next month and updates the monthly values correspondingly
 def updateMonth():
-    global monthNumber
-    global membersAttendedThisWeek
-    global membersAttended
-    global accountPayables
-    global memberPayments
+    global monthNumber, hallRent
+
     monthNumber += 1
-    membersAttended = [-1, -1, -1, -1]
-    membersAttendedThisWeek = []
-    accountPayables = 0
-    memberPayments = 0
-    global hallRent
     hallRent = 65
+
     for member in members:
         member.attended = 0
 
+        if member.amountDue <= -10:
+            member.amountDue = 0
+            member.weeksDue = 0
 
 def updateAttendees():
 
@@ -465,18 +466,16 @@ def updateAttendees():
         welcome_page()
         return
 
-    global weekNumber
-    global membersAttended
-    global membersAttendedThisWeek
-    print("Members who attended todays meet: " +
-          str(membersAttendedThisWeek) + "\n")
+    global weekNumber,  membersAttended,  membersAttendedThisWeek
+    print("List of members who attended this week: ")
+    print(*membersAttendedThisWeek, sep = ", ")
 
     member = input(
         "Enter member's first and last name. Ex: 'John Doe'. Enter done when finished.\n> ")
-    while(member != 'Done'):
+    while(member != 'Done' and member != 'done'):
         for mem in members:
             if mem.first_name+" "+mem.last_name == member:
-                membersAttendedThisWeek.append(mem)
+                membersAttendedThisWeek.append(mem.first_name +" "+ mem.last_name)
                 mem.attended += 1
                 mem.amountDue += 10
                 mem.weeksDue += 1
@@ -485,8 +484,10 @@ def updateAttendees():
 
         member = input("> ")
 
-    print("List of members who attended: " +
-          str(membersAttendedThisWeek) + "\nWant to add more? (Yes/No)")
+    print("List of members who attended this week: ")
+    print(*membersAttendedThisWeek, sep = ", ") 
+
+    print ("\nWant to add more? (Yes/No)")
     action = input("> ")
     if (action == "Yes"):
         updateAttendees()
@@ -498,45 +499,58 @@ def updateAttendees():
 
 
 def revenue():
-    global accountPayables
-    global memberPayments
+    global accountPayables, memberPayments
+    accountPayables = 0
+    memberPayments = 0
 
     for member in members:
-        if (member.amountDue < 0):
+        if (member.amountDue < 0 and member.weeksDue < 0):
             accountPayables += abs(member.amountDue)
         elif(member.amountDue == 0 and member.attended > 0 and member.weeksDue == 0):
             memberPayments += member.attended * 10
 
 # calculates and returns the net income, and also updates monthlyProfits and monthlyUnpaidDebts
 
+def add_member():
+    clear()
+    fn = input("First name: ")
+    ln = input("Last name: ")
+    email = input("Email: ")
+    password = input("Temporary Password: ")
+
+    if user_signUpError(fn, ln, email, password) == True:
+        member = Member(fn, ln, email, password, [])
+        members.append(member)
+        clear()
+        print("You have successfully added a member: ", member.first_name, "!")
+    print("Please select one of the option below:")
+    print("'check/send mail', 'attendees', 'remove member', 'add member', 'sort members' or 'logout'")
 
 def net_income():
     net_income = 0
-    global monthNumber
-    global accountPayables
-    global memberPayments
-    # [{'monthNumber':monthNumber, 'monthlyDebt':monthlyDebt}]
-    global monthlyUnpaidDebt
+    global monthNumber, accountPayables, memberPayments, monthlyUnpaidDebt, hallRent
+
 
     revenue()
-
-    net_income = memberPayments + accountPayables - 400 - 60 - 400
+    
+    net_income = memberPayments + accountPayables - (60 + hallRent)
 
     monthlyProfits[monthNumber] = net_income
 
+    #if month already exists in monthlyUnpaidDebt
     for aMonthsDebt in range(len(monthlyUnpaidDebt)):
         if(monthlyUnpaidDebt[aMonthsDebt]['monthNumber'] == monthNumber and net_income < 0):
             monthlyUnpaidDebt[aMonthsDebt]['monthlyDebt'] = net_income
-            break
+            return net_income
         elif(monthlyUnpaidDebt[aMonthsDebt]['monthNumber'] == monthNumber and net_income >= 0):
             monthlyUnpaidDebt[aMonthsDebt]['monthlyDebt'] = 0
-            break
-        elif(net_income < 0):
-            monthlyUnpaidDebt.append(
-                {'monthNumber': monthNumber, 'monthlyDebt': net_income})
-        elif(net_income >= 0):
-            monthlyUnpaidDebt.append(
-                {'monthNumber': monthNumber, 'monthlyDebt': 0})
+            return net_income
+
+    #if month does not exist, then it is added to monthlyUnpaidDebt
+    if (net_income < 0):
+        monthlyUnpaidDebt.append( {'monthNumber': monthNumber, 'monthlyDebt': net_income})
+    elif(net_income >= 0):
+        monthlyUnpaidDebt.append( {'monthNumber': monthNumber, 'monthlyDebt': 0})
 
     return net_income
 
@@ -544,6 +558,7 @@ def net_income():
 # prints the income statement
 def income_statement():
     clear()
+    
     if (current_member == ""):
         print("You must be logged in to send mail!")
         main()
@@ -554,6 +569,9 @@ def income_statement():
         welcome_page()
         return
 
+    global hallRent, monthNumber, monthlyProfits, monthlyUnpaidDebt
+    netIncome = net_income() #calls revenue functions as well   
+    clear()
     print("Income Statement")
     print("=-=-=-=-=-=-=-=-\n")
 
@@ -565,20 +583,31 @@ def income_statement():
 
     print("Expenses:")
     print("---------")
-    print("Hall expenses        \t400")
-    print("Equipment maintenance\t60")
-    print("Coach's Salary       \t400\n")
+    print("Hall rent        \t" + str(hallRent))
+    print("Coach's Salary       \t60\n")
 
     print("Net income:")
     print("---------")
-    netIncome = net_income()
     print("Revenue - Expenses   \t" + str(netIncome) + "\n")
 
-    print(monthlyProfits)
-    print(monthlyUnpaidDebt)
-
-    print("\nMonths profits:")
+    print("\nMonthly profits:")
     print("---------")
+    for i in range(monthNumber+1):
+        print("Month: " + str(i+1) + "\tProfits: $" + str(monthlyProfits[i]))
+
+    print("\nPrioritized Monthly Debts:")
+    print("---------")
+
+    monthsWithDebtPaid = [d for d in monthlyUnpaidDebt if d['monthlyDebt'] == 0]
+    monthsWithUnpaidDebt = [d for d in monthlyUnpaidDebt if d['monthlyDebt'] != 0]
+
+    monthsWithUnpaidDebt.sort(key = lambda x:x['monthNumber'])
+    monthsWithUnpaidDebt.extend(monthsWithDebtPaid)
+    
+    for i in monthsWithUnpaidDebt:
+        print("Month: " + str(i['monthNumber']+1) + "\tDebt: $" + str(abs(i['monthlyDebt'])))
+    print("")
+
 
 
 # basically like a main function where everything else happens
@@ -623,6 +652,8 @@ def main():
             income_statement()
         elif(actions == "sort members"):
             sort_members()
+        elif(actions == "add member"):
+            add_member()
         elif(actions != "quit"):
             print("Action not recognized, please enter a valid input.")
         elif(actions == "quit"):
