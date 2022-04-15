@@ -44,10 +44,10 @@ members.append(Treasurer)
 Coach = Member("Coach", "", "coach@mem.com", "coach123", [])
 members.append(Coach)
 
-members.append(Member("k", "y", "ky@mem.com", "ky", []))
-members.append(Member("j", "k", "jk@mem.com", "jk", []))
-members.append(Member("s", "y", "sy@mem.com", "sy", []))
-members.append(Member("y", "y", "yy@mem.com", "yy", []))
+members.append(Member("Jen", "Kond", "jk@mem.com", "jk", []))
+members.append(Member("Sof", "Yed", "sy@mem.com", "sy", []))
+members.append(Member("John", "Doe", "jd@mem.com", "jd", []))
+members.append(Member("Sam", "Smith", "ss@mem.com", "ss", []))
 
 
 def clear():
@@ -214,23 +214,27 @@ def make_payment():
     user_inp = input("\nMake a single-time payment? ('Yes'/'No')\n> ")
     clear()
 
-    if currMember.amountDue <= -10 and currMember.weeksDue == 0 and (user_inp == "yes" or user_inp == "Yes"):
+    if currMember.amountDue <= -40 and currMember.weeksDue == 0 and (user_inp == "yes" or user_inp == "Yes"):
         print("Your account owes no fees!\nTaking you to the home page!")
         welcome_page()
         return
 
-
     if user_inp == "yes" or user_inp == "Yes":
         amount = input("Enter the amount: $")
-    
+    else:
+        welcome_page()
+        return
+
     if (50 - weekNumber*10) < int(amount):
-        print("Payment can only be made up to one month in advance, you can make a payment up to $"+str((50 - weekNumber*10)))
-    
-        
+        print("Payment can only be made up to one month in advance, you can make a payment up to $" +
+              str((50 - weekNumber*10)))
+
     if (50 - weekNumber*10) >= int(amount):
-        payment_type = input("Please select a payment type: Debit or Credit \n> ")
-    
-        while ((payment_type != "Debit") and (payment_type != "Credit") ):
+
+        payment_type = input(
+            "Please select a payment type: Debit or Credit \n> ")
+
+        while ((payment_type != "Debit") and (payment_type != "Credit")):
             payment_type = input(
                 "Select a valid payment method.\nPlease select a payment type: 'Debit' or 'Credit' \n> ")
         card_info = input("Please enter your card number (xxxxXXXXxxxxXXXX): ")
@@ -238,7 +242,8 @@ def make_payment():
 
         while valid_payment(card_info, card_date) == False:
             print("Your card details are incorrect, please try again!")
-            card_info = input("Please enter your card number (xxxxXXXXxxxxXXXX): ")
+            card_info = input(
+                "Please enter your card number (xxxxXXXXxxxxXXXX): ")
             card_date = input("Please enter expiry date (XXXX): ")
 
         currMember.amountDue -= float(amount)
@@ -252,9 +257,6 @@ def make_payment():
         elif user_inp == "no":
             welcome_page()
             return
-    else:
-        welcome_page()
-        return
 
 
 # this function tests wether the card details are correct # card digits
@@ -319,7 +321,8 @@ def hall_payment():
 
         while valid_payment(card_info, card_date) == False:
             print("Your card details are incorrect, please try again!")
-            card_info = input("Please enter your card number (xxxxXXXXxxxxXXXX): ")
+            card_info = input(
+                "Please enter your card number (xxxxXXXXxxxxXXXX): ")
             card_date = input("Please enter expiry date (XXXX): ")
 
         clear()
@@ -353,7 +356,7 @@ def penalty_fee():
 def discount():
     for member in members:
         if member.first_name+" "+member.last_name == current_member:
-            if (member.amountDue == 0 and current_member != "Coach" and current_member != "Treasurer" and member.attended == 3):
+            if (member.amountDue == 0 and current_member != "Coach" and current_member != "Treasurer" and member.attended >= 3):
                 member.amountDue -= (member.amountDue*0.1)
                 now = datetime.now()
                 date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
@@ -425,7 +428,7 @@ def sort_members():
 # this function simulates the next week and updates the weekly values correspondingly
 def updateWeek():
     global weekNumber, membersAttendedThisWeek, membersAttended, accountPayables, memberPayments
-    
+
     memberPayments = 0
     accountPayables = 0
     membersAttended = [-1, -1, -1, -1]
@@ -436,7 +439,6 @@ def updateWeek():
         weekNumber = 1
     else:
         weekNumber += 1
-        
 
 
 # this function simulates the next month and updates the monthly values correspondingly
@@ -453,6 +455,7 @@ def updateMonth():
             member.amountDue = 0
             member.weeksDue = 0
 
+
 def updateAttendees():
 
     clear()
@@ -468,14 +471,15 @@ def updateAttendees():
 
     global weekNumber,  membersAttended,  membersAttendedThisWeek
     print("List of members who attended this week: ")
-    print(*membersAttendedThisWeek, sep = ", ")
+    print(*membersAttendedThisWeek, sep=", ")
 
     member = input(
         "Enter member's first and last name. Ex: 'John Doe'. Enter done when finished.\n> ")
     while(member != 'Done' and member != 'done'):
         for mem in members:
             if mem.first_name+" "+mem.last_name == member:
-                membersAttendedThisWeek.append(mem.first_name +" "+ mem.last_name)
+                membersAttendedThisWeek.append(
+                    mem.first_name + " " + mem.last_name)
                 mem.attended += 1
                 mem.amountDue += 10
                 mem.weeksDue += 1
@@ -485,9 +489,9 @@ def updateAttendees():
         member = input("> ")
 
     print("List of members who attended this week: ")
-    print(*membersAttendedThisWeek, sep = ", ") 
+    print(*membersAttendedThisWeek, sep=", ")
 
-    print ("\nWant to add more? (Yes/No)")
+    print("\nWant to add more? (Yes/No)")
     action = input("> ")
     if (action == "Yes"):
         updateAttendees()
@@ -511,6 +515,7 @@ def revenue():
 
 # calculates and returns the net income, and also updates monthlyProfits and monthlyUnpaidDebts
 
+
 def add_member():
     clear()
     fn = input("First name: ")
@@ -526,18 +531,18 @@ def add_member():
     print("Please select one of the option below:")
     print("'check/send mail', 'attendees', 'remove member', 'add member', 'sort members' or 'logout'")
 
+
 def net_income():
     net_income = 0
     global monthNumber, accountPayables, memberPayments, monthlyUnpaidDebt, hallRent
 
-
     revenue()
-    
+
     net_income = memberPayments + accountPayables - (60 + hallRent)
 
     monthlyProfits[monthNumber] = net_income
 
-    #if month already exists in monthlyUnpaidDebt
+    # if month already exists in monthlyUnpaidDebt
     for aMonthsDebt in range(len(monthlyUnpaidDebt)):
         if(monthlyUnpaidDebt[aMonthsDebt]['monthNumber'] == monthNumber and net_income < 0):
             monthlyUnpaidDebt[aMonthsDebt]['monthlyDebt'] = net_income
@@ -546,11 +551,13 @@ def net_income():
             monthlyUnpaidDebt[aMonthsDebt]['monthlyDebt'] = 0
             return net_income
 
-    #if month does not exist, then it is added to monthlyUnpaidDebt
+    # if month does not exist, then it is added to monthlyUnpaidDebt
     if (net_income < 0):
-        monthlyUnpaidDebt.append( {'monthNumber': monthNumber, 'monthlyDebt': net_income})
+        monthlyUnpaidDebt.append(
+            {'monthNumber': monthNumber, 'monthlyDebt': net_income})
     elif(net_income >= 0):
-        monthlyUnpaidDebt.append( {'monthNumber': monthNumber, 'monthlyDebt': 0})
+        monthlyUnpaidDebt.append(
+            {'monthNumber': monthNumber, 'monthlyDebt': 0})
 
     return net_income
 
@@ -558,7 +565,7 @@ def net_income():
 # prints the income statement
 def income_statement():
     clear()
-    
+
     if (current_member == ""):
         print("You must be logged in to send mail!")
         main()
@@ -570,7 +577,7 @@ def income_statement():
         return
 
     global hallRent, monthNumber, monthlyProfits, monthlyUnpaidDebt
-    netIncome = net_income() #calls revenue functions as well   
+    netIncome = net_income()  # calls revenue functions as well
     clear()
     print("Income Statement")
     print("=-=-=-=-=-=-=-=-\n")
@@ -598,16 +605,18 @@ def income_statement():
     print("\nPrioritized Monthly Debts:")
     print("---------")
 
-    monthsWithDebtPaid = [d for d in monthlyUnpaidDebt if d['monthlyDebt'] == 0]
-    monthsWithUnpaidDebt = [d for d in monthlyUnpaidDebt if d['monthlyDebt'] != 0]
+    monthsWithDebtPaid = [
+        d for d in monthlyUnpaidDebt if d['monthlyDebt'] == 0]
+    monthsWithUnpaidDebt = [
+        d for d in monthlyUnpaidDebt if d['monthlyDebt'] != 0]
 
-    monthsWithUnpaidDebt.sort(key = lambda x:x['monthNumber'])
+    monthsWithUnpaidDebt.sort(key=lambda x: x['monthNumber'])
     monthsWithUnpaidDebt.extend(monthsWithDebtPaid)
-    
-    for i in monthsWithUnpaidDebt:
-        print("Month: " + str(i['monthNumber']+1) + "\tDebt: $" + str(abs(i['monthlyDebt'])))
-    print("")
 
+    for i in monthsWithUnpaidDebt:
+        print("Month: " + str(i['monthNumber']+1) +
+              "\tDebt: $" + str(abs(i['monthlyDebt'])))
+    print("")
 
 
 # basically like a main function where everything else happens
