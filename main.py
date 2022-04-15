@@ -356,7 +356,7 @@ def penalty_fee():
 def discount():
     for member in members:
         if member.first_name+" "+member.last_name == current_member:
-            if (member.amountDue == 0 and current_member != "Coach" and current_member != "Treasurer" and member.attended >= 3):
+            if (member.amountDue <= 10 and current_member != "Coach" and current_member != "Treasurer" and member.attended >= 4):
                 member.amountDue -= (member.amountDue*0.1)
                 now = datetime.now()
                 date_time = now.strftime("%m/%d/%Y %H:%M") + "\n"
